@@ -1,0 +1,1315 @@
+Below is a detailed implementation prompt you can reuse to generate the new **Cloudflare Pages + Supabase-native** version.
+
+You are a senior full-stack engineer, product architect, Supabase/Postgres security specialist, and Cloudflare Pages deployment expert.
+
+Your task is to generate a new complete zip version of the personal trainer customer management app using this exact architecture:
+
+* Cloudflare Pages
+* Supabase Auth
+* Supabase Postgres
+* Supabase Row Level Security
+* Supabase SQL functions / RPC for sensitive business operations
+* Cloudflare Pages frontend
+* Optional Cloudflare Pages Functions only where genuinely useful
+* No NestJS
+* No Prisma
+* No Docker
+* No Oracle VM
+* No custom backend server
+* No custom HTTP-only cookie session system
+* No custom invite-token auth system
+* No custom password-reset-token auth system
+
+The previous version of the project used:
+
+* Next.js frontend
+* NestJS API
+* Prisma ORM
+* PostgreSQL
+* Docker
+* Custom session cookies
+* Custom invite tokens
+* Custom password reset tokens
+* Server-side RBAC guards
+
+This new version must replace those backend responsibilities with:
+
+* Supabase Auth
+* Supabase user metadata / profiles
+* Supabase database schema
+* Supabase RLS policies
+* Supabase RPC functions
+* Supabase email invite/password reset flows
+* Frontend route protection
+* Database-level access control
+
+The final output must be a downloadable zip file containing the complete project and clear setup instructions.
+
+---
+
+# 1. Core Goal
+
+Build a production-oriented MVP of a personal trainer customer management web app that can be hosted on Cloudflare Pages and uses Supabase as the complete backend platform.
+
+The app must allow:
+
+* A personal trainer/admin to manage customers, exercises, workout plans, sessions, bookings, payments, credits, body metrics, notifications, and settings.
+* Customers to log in, view their dashboard, see next sessions, view assigned workout plans/schede, request bookings, view progress, view payments, view credits, read notifications, and manage language/theme preferences.
+* The app to be phone-accessible through a public Cloudflare Pages URL or custom domain.
+* The laptop to be unnecessary after deployment.
+* The app to require no VPS, no Docker, no self-hosted backend, and no long-running API process.
+
+---
+
+# 2. Required Stack
+
+Use this stack:
+
+## Frontend
+
+* Vite
+* React
+* TypeScript
+* MUI
+* React Router
+* React Hook Form
+* Zod
+* TanStack Query
+* Supabase JavaScript client
+* Responsive mobile-first layout
+* Light, dark, and system theme
+* i18n support for English, Spanish, and Italian
+
+## Backend Platform
+
+* Supabase Auth
+* Supabase Postgres
+* Supabase Row Level Security
+* Supabase SQL functions / RPC
+* Supabase Storage-ready structure for future exercise media uploads
+* Supabase Edge Functions only if absolutely necessary; prefer Postgres RPC for business logic
+* Cloudflare Pages for frontend hosting
+* Optional Cloudflare Pages Functions only for small proxy/utility endpoints if needed
+
+## Hosting
+
+* Cloudflare Pages
+* Supabase project
+* Cloudflare DNS/custom domain-ready setup
+
+Do not use:
+
+* NestJS
+* Prisma
+* Docker
+* Express
+* Fastify
+* PostgreSQL running locally as the production DB
+* Oracle Cloud VM
+* Railway
+* Render
+* Koyeb
+* Vercel serverless backend
+* Custom auth sessions
+* Custom invite token tables
+* Custom password reset token tables
+
+---
+
+# 3. Expected Project Structure
+
+Create a clean project structure similar to this:
+
+trainer-app-supabase-cloudflare/
+package.json
+package-lock.json or pnpm-lock.yaml
+index.html
+vite.config.ts
+tsconfig.json
+wrangler.toml
+public/
+_redirects
+src/
+main.tsx
+App.tsx
+routes/
+router.tsx
+ProtectedRoute.tsx
+AdminRoute.tsx
+CustomerRoute.tsx
+lib/
+supabase.ts
+queryClient.ts
+i18n.ts
+format.ts
+permissions.ts
+errors.ts
+theme/
+ThemeProvider.tsx
+theme.ts
+layouts/
+AppShell.tsx
+AdminShell.tsx
+CustomerShell.tsx
+MobileBottomNav.tsx
+components/
+LoadingScreen.tsx
+EmptyState.tsx
+ConfirmDialog.tsx
+StatusChip.tsx
+StatCard.tsx
+FormTextField.tsx
+FormSelect.tsx
+DataTable.tsx
+pages/
+LoginPage.tsx
+ForgotPasswordPage.tsx
+ResetPasswordPage.tsx
+AcceptInvitePage.tsx
+DashboardPage.tsx
+SessionsPage.tsx
+SessionDetailPage.tsx
+WorkoutPlanPage.tsx
+ExerciseDetailPage.tsx
+MetricsPage.tsx
+AvailabilityPage.tsx
+PaymentsPage.tsx
+NotificationsPage.tsx
+SettingsPage.tsx
+admin/
+AdminDashboardPage.tsx
+CustomersPage.tsx
+CustomerDetailPage.tsx
+CreateCustomerPage.tsx
+ExercisesPage.tsx
+ExerciseEditorPage.tsx
+WorkoutPlansPage.tsx
+WorkoutPlanEditorPage.tsx
+SessionsPage.tsx
+BookingsPage.tsx
+PaymentsPage.tsx
+PackagesPage.tsx
+SettingsPage.tsx
+NotificationsPage.tsx
+services/
+auth.service.ts
+profiles.service.ts
+customers.service.ts
+exercises.service.ts
+workoutPlans.service.ts
+sessions.service.ts
+bookings.service.ts
+payments.service.ts
+credits.service.ts
+metrics.service.ts
+notifications.service.ts
+settings.service.ts
+validation/
+auth.schemas.ts
+customer.schemas.ts
+exercise.schemas.ts
+workout.schemas.ts
+booking.schemas.ts
+payment.schemas.ts
+metric.schemas.ts
+settings.schemas.ts
+messages/
+en.json
+es.json
+it.json
+supabase/
+README.md
+schema.sql
+policies.sql
+functions.sql
+seed.sql
+storage.sql
+reset.sql
+docs/
+CLOUDFLARE_SUPABASE_DEPLOYMENT.md
+SUPABASE_SECURITY_MODEL.md
+TRAINER_USER_MANUAL.md
+ADMIN_TESTING_CHECKLIST.md
+.env.example
+README.md
+
+---
+
+# 4. Product Features
+
+Implement the MVP end-to-end.
+
+## Roles
+
+Use these roles:
+
+* admin
+* customer
+
+Roles must be stored in an app-owned profile table, not trusted only from frontend state.
+
+Suggested table:
+
+public.profiles
+id uuid primary key references auth.users(id)
+role text check role in ('admin', 'customer')
+status text check status in ('invited', 'active', 'deactivated')
+full_name text
+email text
+phone text
+language text check language in ('en', 'es', 'it')
+theme text check theme in ('light', 'dark', 'system')
+force_password_change boolean default false
+created_at timestamptz
+updated_at timestamptz
+
+RLS must enforce:
+
+* Admins can manage all business records.
+* Customers can only read/update their own allowed records.
+* Customers must not see other customers.
+* Customers must not see other customers’ bookings.
+* Customers must not see admin-only notes.
+* Customers must not mutate financial records, credits, or workout plans directly.
+
+---
+
+# 5. Supabase Auth Requirements
+
+Use Supabase Auth for:
+
+* Login
+* Logout
+* Password reset
+* Admin-created customer accounts through Supabase invite/user creation process
+* Email-based onboarding
+* Password recovery
+* Session persistence
+
+Do not implement custom password reset tables.
+
+Do not implement custom invite token tables.
+
+Use Supabase-native flows where possible.
+
+Implement frontend pages for:
+
+* Login
+* Forgot password
+* Reset password
+* Accept invite / onboarding
+* Settings/profile update
+
+Admin customer creation should either:
+
+1. Use Supabase Admin API through a secure function if available, or
+2. Provide documented manual Supabase invite flow for MVP, or
+3. Use a Cloudflare Pages Function with a protected service role key only if strictly necessary.
+
+Important: never expose the Supabase service role key in frontend code.
+
+If service-role operations are needed, isolate them behind a Cloudflare Pages Function or Supabase Edge Function with strict admin checks.
+
+---
+
+# 6. Supabase Database Schema
+
+Create SQL files under `supabase/`.
+
+Implement a complete relational schema.
+
+Use UUID primary keys.
+
+Use timestamptz for timestamps.
+
+Use numeric for money and credit quantities.
+
+Use JSONB for localized strings and flexible settings.
+
+Use soft archive/status fields instead of hard deletes for business entities.
+
+Include these tables:
+
+## Identity and Profiles
+
+* profiles
+* trainer_profiles
+* customer_profiles
+
+## Exercises and Workouts
+
+* exercises
+* exercise_media
+* workout_plans
+* workout_plan_exercises
+* session_exercises
+
+## Sessions and Booking
+
+* sessions
+* session_participants
+* availability_rules
+* availability_exceptions
+* booking_requests
+* reschedule_requests
+* cancellation_logs
+* shared_session_requests
+
+## Payments and Credits
+
+* packages
+* payments
+* session_credit_ledger
+
+## Progress
+
+* body_metrics
+
+## Notifications
+
+* notifications
+* notification_deliveries
+
+## Settings and Audit
+
+* app_settings
+* audit_logs
+
+Do not include:
+
+* invite_tokens
+* password_reset_tokens
+* auth_sessions
+
+Those are replaced by Supabase Auth.
+
+---
+
+# 7. Required Domain Enums
+
+In Postgres SQL, use either enum types or checked text fields.
+
+Represent these domain states:
+
+## Users
+
+* role: admin, customer
+* status: invited, active, deactivated
+* language: en, es, it
+* theme: light, dark, system
+
+## Exercises
+
+* exercise_status: active, archived
+* difficulty: beginner, intermediate, advanced
+* media_type: image, gif, video
+
+## Workout Plans
+
+* workout_plan_status: draft, active, archived
+
+## Sessions
+
+* session_type: private, shared
+* session_status: scheduled, confirmed, completed, cancelled, no_show
+* participant_status: invited, accepted, declined, attended, no_show
+
+## Booking
+
+* booking_request_status: pending, accepted, declined, proposed_alternative, cancelled, expired, conflicted
+* cancellation_credit_action: none, consumed, manual_review
+* shared_request_status: pending, accepted, declined, expired
+
+## Payments
+
+* payment_method: bank_transfer, stripe, cash, other
+* payment_status: pending, awaiting_confirmation, completed, rejected, failed
+* payment_provider: manual, stripe
+
+## Credits
+
+* credit_ledger_reason: payment_unlock, session_completed, late_cancel, admin_adjustment, refund, correction
+
+## Notifications
+
+* notification_status: unread, read
+* notification_delivery_channel: in_app, email, push
+* notification_delivery_status: pending, sent, failed, read
+
+## Availability
+
+* availability_exception_type: unavailable, custom_available
+
+## Settings
+
+* late_cancel_policy: consume_credit, do_not_consume, manual_review, warn_only
+
+---
+
+# 8. Row Level Security Requirements
+
+Enable RLS on every app table.
+
+Create helper SQL functions:
+
+* public.current_user_id()
+* public.current_user_role()
+* public.is_admin()
+* public.is_active_user()
+* public.is_customer()
+* public.owns_customer_record(customer_user_id uuid)
+* public.assert_admin()
+* public.assert_active()
+
+RLS policy requirements:
+
+## profiles
+
+* Users can read their own profile.
+* Admins can read all profiles.
+* Users can update only safe fields on their own profile:
+
+  * full_name
+  * phone
+  * language
+  * theme
+* Only admins can modify role, status, force_password_change.
+
+## customers
+
+* Admins can read/write all customer profiles.
+* Customers can read their own customer profile.
+* Customers cannot read internal trainer notes.
+
+## exercises
+
+* Active exercises readable by active users.
+* Admins can create/update/archive exercises.
+* Customers cannot mutate exercises.
+
+## workout_plans
+
+* Admins can manage all plans.
+* Customers can read only assigned active plans belonging to them.
+* Customers cannot edit plans.
+
+## sessions
+
+* Admins can read/write all sessions.
+* Customers can read only sessions where they are a participant or primary customer.
+* Customers cannot see names/details of other customers in unavailable slots.
+
+## booking_requests
+
+* Admins can read/manage all booking requests.
+* Customers can create booking requests for themselves.
+* Customers can read only their own booking requests.
+* Customers cannot accept/decline/propose alternatives.
+
+## payments
+
+* Admins can read/write all payments.
+* Customers can read only their own payments.
+* Customers cannot mark payments completed/rejected.
+
+## session_credit_ledger
+
+* Admins can read all and insert through RPC.
+* Customers can read only their own ledger.
+* Customers cannot insert/update/delete ledger rows.
+
+## body_metrics
+
+* Admins can create/read customer metrics.
+* Customers can read only their own metrics.
+* Customers cannot create or edit body metrics in MVP.
+
+## notifications
+
+* Admins can create announcements.
+* Users can read only notifications addressed to them.
+* Users can mark their own notifications as read.
+
+## audit_logs
+
+* Admins can read audit logs.
+* No direct insert from frontend.
+* Insert only through RPC/security definer functions.
+
+---
+
+# 9. SQL RPC Functions
+
+Sensitive business operations must be implemented as Postgres functions with `security definer` where appropriate and explicit authorization checks.
+
+Create these RPC functions:
+
+## Admin Customer Functions
+
+* create_customer_profile(...)
+* deactivate_customer(customer_id uuid)
+* reactivate_customer(customer_id uuid)
+* reset_customer_onboarding(customer_id uuid)
+* set_customer_language(customer_id uuid, language text)
+
+Note: actual Supabase Auth user creation/invite may require service-role code. If so, document that clearly and implement a safe Cloudflare Pages Function or Supabase Edge Function if needed.
+
+## Workout Functions
+
+* assign_workout_plan(plan_id uuid, customer_user_id uuid)
+* archive_exercise(exercise_id uuid)
+* archive_workout_plan(plan_id uuid)
+
+## Booking Functions
+
+* request_booking(requested_start timestamptz, requested_end timestamptz, notes text)
+* cancel_booking_request(request_id uuid)
+* accept_booking_request(request_id uuid)
+* decline_booking_request(request_id uuid, reason text)
+* propose_booking_time(request_id uuid, proposed_start timestamptz, proposed_end timestamptz, message text)
+
+## Session Functions
+
+* create_manual_session(customer_user_id uuid, start_at timestamptz, end_at timestamptz, workout_plan_id uuid, notes text)
+* complete_session(session_id uuid)
+* mark_session_no_show(session_id uuid)
+* cancel_session(session_id uuid, reason text)
+* request_reschedule(session_id uuid, requested_start timestamptz, requested_end timestamptz, reason text)
+
+## Payment and Credit Functions
+
+* mark_payment_completed(payment_id uuid)
+* mark_payment_rejected(payment_id uuid, reason text)
+* adjust_customer_credits(customer_user_id uuid, quantity numeric, reason text)
+* get_customer_credit_balance(customer_user_id uuid)
+* get_my_credit_balance()
+
+## Notification Functions
+
+* mark_notification_read(notification_id uuid)
+* create_admin_announcement(title text, message text, recipient_mode text)
+
+## Availability Functions
+
+* get_public_availability(start_date date, end_date date)
+* is_slot_available(trainer_user_id uuid, start_at timestamptz, end_at timestamptz)
+
+Important:
+
+* Do not trust customer_id from frontend for customer-owned actions. Use `auth.uid()` inside functions.
+* Admin RPC functions must call `assert_admin()`.
+* All credit mutations must be append-only.
+* All sensitive operations must write audit logs.
+
+---
+
+# 10. Business Rules
+
+Implement these rules in SQL functions, not just frontend.
+
+## Booking Request Rule
+
+When a customer requests a booking:
+
+* User must be authenticated.
+* User must be active.
+* User must have role customer.
+* User must not be deactivated.
+* If booking without credits is disabled, credit balance must be greater than 0.
+* Requested slot must be available.
+* Requested start must be before requested end.
+* Requested slot must not overlap existing confirmed/scheduled sessions.
+* Requested slot must not overlap unavailable exceptions.
+* Create pending booking request.
+* Create notification for admin.
+* Write audit log.
+
+## Accept Booking Rule
+
+When admin accepts a booking:
+
+* Admin must be authenticated and active.
+* Booking request must be pending.
+* Slot must still be available.
+* If no longer available, set request to conflicted.
+* Create confirmed session.
+* Add session participant.
+* Mark booking request accepted.
+* Notify customer.
+* Write audit log.
+
+## Cancel Session Rule
+
+When a session is cancelled:
+
+* Actor must be admin or the session-owning customer.
+* Calculate hours before session.
+* Compare against cancellation window setting, default 24 hours.
+* If late, apply configured late cancellation policy:
+
+  * consume_credit: add `-1` ledger entry.
+  * manual_review: log manual review.
+  * do_not_consume: no credit entry.
+  * warn_only: notification only.
+* Mark session cancelled.
+* Create cancellation log.
+* Notify relevant user.
+* Write audit log.
+
+## Complete Session Rule
+
+When admin completes a session:
+
+* Admin only.
+* Session must not already be completed.
+* Add `-1` credit ledger entry if credit was not already consumed.
+* Mark session completed.
+* Notify customer.
+* Write audit log.
+
+## Mark Payment Completed Rule
+
+When admin completes payment:
+
+* Admin only.
+* Payment must not already be completed.
+* Payment must have a package.
+* Add package credit quantity to ledger.
+* Mark payment completed.
+* Notify customer.
+* Write audit log.
+
+---
+
+# 11. Frontend Routes
+
+Use React Router.
+
+Implement routes:
+
+## Public
+
+* `/login`
+* `/forgot-password`
+* `/reset-password`
+* `/accept-invite`
+
+## Customer
+
+* `/dashboard`
+* `/sessions`
+* `/sessions/:id`
+* `/workout-plan`
+* `/exercises/:id`
+* `/metrics`
+* `/availability`
+* `/payments`
+* `/notifications`
+* `/settings`
+
+## Admin
+
+* `/admin`
+* `/admin/customers`
+* `/admin/customers/new`
+* `/admin/customers/:id`
+* `/admin/exercises`
+* `/admin/exercises/new`
+* `/admin/exercises/:id`
+* `/admin/workout-plans`
+* `/admin/workout-plans/new`
+* `/admin/workout-plans/:id`
+* `/admin/sessions`
+* `/admin/bookings`
+* `/admin/payments`
+* `/admin/packages`
+* `/admin/settings`
+* `/admin/notifications`
+* `/admin/audit-logs`
+
+Route protection:
+
+* Public pages redirect authenticated users to the correct dashboard.
+* Customer routes require role customer or admin where appropriate.
+* Admin routes require role admin.
+* If a user is deactivated, sign them out and show an error.
+* If profile is missing, show setup/error state.
+
+---
+
+# 12. Frontend Screens
+
+Build working UI. Avoid dead buttons.
+
+Use MUI components:
+
+* AppBar
+* Drawer
+* BottomNavigation
+* Card
+* Stack
+* Grid
+* DataGrid or MUI table
+* Dialog
+* TextField
+* Select
+* Autocomplete
+* Tabs
+* Chip
+* Alert
+* Snackbar
+* LinearProgress
+* Date/time inputs
+
+## Customer Dashboard
+
+Show:
+
+* Next session
+* Active workout plan
+* Session credit balance
+* Payment status
+* Latest body metrics
+* Upcoming booking requests
+* Notifications
+
+## Admin Dashboard
+
+Show:
+
+* Today’s sessions
+* Pending booking requests
+* Pending payments
+* Low-credit customers
+* Latest metric updates
+* Monthly revenue summary
+* Recent notifications
+
+## Customer Management
+
+Admin can:
+
+* List customers
+* View customer details
+* Create customer profile
+* Deactivate/reactivate customer
+* Edit safe profile data
+* View credits
+* Adjust credits
+* View payments
+* View sessions
+* View body metrics
+* Add body metric entry
+
+## Exercise Library
+
+Admin can:
+
+* Create exercise
+* Edit exercise
+* Archive exercise
+* Add localized names/descriptions
+* Add media URL
+* Add category, muscles, equipment, difficulty, instructions, common mistakes, safety notes
+
+Customers can:
+
+* View exercise details if exercise is in their plan or active library
+
+## Workout Plans
+
+Admin can:
+
+* Create plan
+* Add exercises
+* Define sets, reps, weight, rest, tempo, duration, RPE, notes, progression instructions
+* Assign plan to customer
+* Archive plan
+
+Customer can:
+
+* View assigned active plan
+* View session exercises
+* Not edit
+
+## Availability and Booking
+
+Customer can:
+
+* View free slots
+* Request booking
+* Cancel their own pending booking
+* Request reschedule
+
+Admin can:
+
+* View booking requests
+* Accept
+* Decline
+* Propose alternative
+* Create manual sessions
+* Cancel/complete/no-show sessions
+
+## Payments and Credits
+
+Admin can:
+
+* Create packages
+* Create payments
+* Mark payment completed
+* Mark payment rejected
+* Adjust credits
+
+Customer can:
+
+* View payment history
+* View bank transfer details
+* View credit balance
+* View credit ledger
+
+## Notifications
+
+Users can:
+
+* View notification inbox
+* Mark notifications read
+
+Admin can:
+
+* Send announcement
+
+## Settings
+
+Users can:
+
+* Change language
+* Change theme
+* Update profile fields
+
+Admin can:
+
+* Configure app settings:
+
+  * cancellation window
+  * late cancellation policy
+  * bank details
+  * default language
+  * default theme
+  * booking without credits flag
+
+---
+
+# 13. Internationalization
+
+Support:
+
+* English
+* Spanish
+* Italian
+
+Frontend must use translation keys for user-facing text.
+
+Create:
+
+* `src/messages/en.json`
+* `src/messages/es.json`
+* `src/messages/it.json`
+
+It is acceptable for Spanish and Italian translations to be simple, but all keys must exist.
+
+Date, time, and currency formatting should respect the selected language where feasible.
+
+Store language preference in `profiles.language`.
+
+---
+
+# 14. Theme
+
+Use MUI theme provider.
+
+Support:
+
+* light
+* dark
+* system
+
+Store theme preference in `profiles.theme`.
+
+Admin can configure app default theme in `app_settings`.
+
+---
+
+# 15. Supabase Seed Data
+
+Create `supabase/seed.sql`.
+
+Seed:
+
+* One admin profile placeholder
+* Three customer profiles placeholder
+* Trainer profile
+* Three packages
+* Ten exercises
+* Exercise media URLs
+* Two workout plans
+* Workout plan exercises
+* Availability rules
+* Sessions
+* Payments
+* Credit ledger entries
+* Body metrics
+* Notifications
+* App settings
+
+Important:
+Supabase Auth users cannot always be reliably created with plain SQL in hosted Supabase unless using auth admin APIs. Provide one of these approaches:
+
+1. A documented manual setup:
+
+   * Create admin user in Supabase Auth dashboard.
+   * Copy auth user UUID.
+   * Insert matching profile row.
+2. A safe script using Supabase service role key:
+
+   * `scripts/create-demo-users.ts`
+   * This script must never run in frontend.
+   * It must read `SUPABASE_SERVICE_ROLE_KEY` from local environment only.
+
+Prefer including the safe script plus documentation.
+
+---
+
+# 16. Security Requirements
+
+Must implement:
+
+* Supabase RLS on all app tables.
+* No direct public access to private records.
+* No frontend exposure of service role key.
+* No customer ability to modify credits/payments.
+* No customer ability to see other customers.
+* No customer ability to see booking owner names.
+* No customer ability to see financial analytics.
+* Audit logging through SQL functions.
+* Admin-only sensitive RPC functions.
+* Validate form inputs using Zod.
+* Validate critical SQL function inputs.
+* Use Supabase Auth session state instead of custom cookies.
+* Avoid storing secrets in Cloudflare Pages frontend environment variables.
+
+Frontend may use:
+
+* `VITE_SUPABASE_URL`
+* `VITE_SUPABASE_ANON_KEY`
+
+Frontend must never use:
+
+* `SUPABASE_SERVICE_ROLE_KEY`
+
+---
+
+# 17. Cloudflare Pages Requirements
+
+Add:
+
+* `wrangler.toml`
+* `public/_redirects`
+* `.env.example`
+* Cloudflare Pages deployment instructions
+
+Cloudflare Pages build settings:
+
+* Framework preset: Vite
+* Build command: `npm run build` or `pnpm build`
+* Build output directory: `dist`
+
+Environment variables in Cloudflare Pages:
+
+* `VITE_SUPABASE_URL`
+* `VITE_SUPABASE_ANON_KEY`
+
+Optional Pages Functions only if required:
+
+* Admin invite/create-user function
+* Never expose service role key to browser
+* Functions must verify caller is admin before performing service-role operations
+
+If using Pages Functions, include:
+
+functions/
+api/
+admin/
+create-customer.ts
+
+and document required secret:
+
+* `SUPABASE_SERVICE_ROLE_KEY`
+
+---
+
+# 18. Local Development Instructions
+
+Provide exact local commands.
+
+Example:
+
+```bash
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Supabase setup:
+
+```bash
+# In Supabase SQL editor, run:
+supabase/schema.sql
+supabase/functions.sql
+supabase/policies.sql
+supabase/storage.sql
+supabase/seed.sql
+```
+
+If using Supabase CLI, include optional instructions:
+
+```bash
+supabase login
+supabase link --project-ref YOUR_PROJECT_REF
+supabase db push
+```
+
+But do not require Docker-based local Supabase for the main path.
+
+---
+
+# 19. Deployment Instructions
+
+Provide a complete deployment guide:
+
+## Supabase
+
+1. Create Supabase project.
+2. Disable unnecessary public Data API exposure where appropriate, or ensure RLS protects all exposed tables.
+3. Run schema SQL.
+4. Run functions SQL.
+5. Run policies SQL.
+6. Run seed SQL.
+7. Create admin auth user.
+8. Link admin auth user to `profiles`.
+9. Configure auth redirect URLs:
+
+   * Local dev URL
+   * Cloudflare Pages URL
+   * Custom domain URL
+
+## Cloudflare Pages
+
+1. Push repo to GitHub.
+2. Create Cloudflare Pages project.
+3. Select repository.
+4. Set build command.
+5. Set build output directory.
+6. Add environment variables.
+7. Deploy.
+8. Configure custom domain.
+9. Test login on phone.
+
+## Cloudflare DNS
+
+If using a custom domain:
+
+* Add domain to Cloudflare.
+* Add Pages custom domain.
+* Ensure SSL/TLS is active.
+
+---
+
+# 20. Testing Requirements
+
+Add useful tests where practical.
+
+Minimum:
+
+* Unit test for permission helpers.
+* Unit test for Zod schemas.
+* Frontend smoke test for login page.
+* Frontend smoke test for dashboard route.
+* Frontend smoke test for admin customers page.
+* SQL test checklist for RLS:
+
+  * Customer cannot read another customer profile.
+  * Customer cannot read another customer payment.
+  * Customer cannot insert credit ledger.
+  * Admin can read customers.
+  * Admin RPC can complete payment.
+  * Customer RPC can request booking.
+  * Customer cannot call admin RPC.
+
+If full automated database tests are too heavy, include a manual SQL verification script/checklist under:
+
+* `supabase/rls-test-checklist.sql`
+* `docs/ADMIN_TESTING_CHECKLIST.md`
+
+---
+
+# 21. Acceptance Criteria
+
+The MVP is done when:
+
+1. Project builds with `npm run build`.
+2. Project runs locally with `npm run dev`.
+3. Cloudflare Pages deployment works.
+4. Supabase Auth login works.
+5. Admin user can log in.
+6. Admin profile is recognized as role admin.
+7. Admin can view dashboard.
+8. Admin can manage customers.
+9. Admin can create/edit/archive exercises.
+10. Admin can create/assign workout plans.
+11. Customer can log in.
+12. Customer sees only their own data.
+13. Customer can view assigned scheda/workout plan.
+14. Customer can view sessions.
+15. Customer can request a booking.
+16. Admin can accept/decline/propose booking request.
+17. Completing a session consumes credit through ledger.
+18. Completing a payment unlocks credits through ledger.
+19. Customer can view payments and credit balance.
+20. Notifications work.
+21. Settings for language/theme work.
+22. RLS is enabled on all app tables.
+23. Sensitive operations use RPC functions, not direct frontend mutations.
+24. Service role key is never exposed to browser.
+25. README gives complete setup and deployment steps.
+
+---
+
+# 22. Implementation Order
+
+Work in this order.
+
+## Phase 1 — Project Scaffold
+
+* Create Vite React TypeScript app.
+* Add MUI.
+* Add React Router.
+* Add Supabase client.
+* Add TanStack Query.
+* Add i18n/message structure.
+* Add theme provider.
+* Add Cloudflare Pages config.
+
+## Phase 2 — Supabase Schema
+
+* Create SQL schema.
+* Add tables.
+* Add indexes.
+* Add constraints.
+* Add timestamps.
+* Add audit log table.
+* Add app settings table.
+* Add seed data.
+
+## Phase 3 — RLS and Security
+
+* Enable RLS on all tables.
+* Add helper functions.
+* Add policies table by table.
+* Add SQL comments explaining access control.
+* Add RLS verification checklist.
+
+## Phase 4 — RPC Business Logic
+
+* Add booking functions.
+* Add session functions.
+* Add payment/credit functions.
+* Add workout assignment functions.
+* Add notification functions.
+* Ensure audit logging.
+
+## Phase 5 — Auth Frontend
+
+* Login.
+* Logout.
+* Forgot password.
+* Reset password.
+* Session provider.
+* Profile loader.
+* Protected routes.
+* Admin/customer route guards.
+
+## Phase 6 — Admin UI
+
+* Admin dashboard.
+* Customers.
+* Exercises.
+* Workout plans.
+* Sessions.
+* Bookings.
+* Payments.
+* Packages.
+* Settings.
+* Notifications.
+* Audit logs.
+
+## Phase 7 — Customer UI
+
+* Customer dashboard.
+* Sessions.
+* Session detail.
+* Workout plan.
+* Exercise detail.
+* Metrics.
+* Availability.
+* Booking request.
+* Payments.
+* Credits.
+* Notifications.
+* Settings.
+
+## Phase 8 — Polish and Deployment
+
+* Responsive layout.
+* Mobile bottom navigation.
+* Empty/loading/error states.
+* README.
+* Cloudflare deployment guide.
+* Supabase setup guide.
+* Zip the final project.
+
+---
+
+# 23. Important Implementation Decisions
+
+Make these decisions without asking:
+
+* Use Vite + React instead of Next.js to align with Cloudflare Pages simplicity.
+* Use Supabase Auth instead of custom auth.
+* Use RLS as the primary security layer.
+* Use SQL RPC functions for business-critical mutations.
+* Use Supabase Postgres as the source of truth.
+* Use manual bank transfer payments for MVP.
+* Do not implement Stripe yet.
+* Do not implement full shared-session matching UI yet, but include shared-session tables.
+* Do not implement email/push notifications yet, but include notification delivery table.
+* Do not use Docker.
+* Do not use a custom server.
+
+---
+
+# 24. Final Output Required
+
+Return:
+
+1. A zip file of the complete project.
+2. A concise summary of files created.
+3. Local setup commands.
+4. Supabase setup steps.
+5. Cloudflare Pages deployment steps.
+6. Admin/demo user creation steps.
+7. What is fully implemented.
+8. What is deferred.
+9. Known limitations.
+10. Next recommended implementation step.
+
+The final zip must be usable as the starting point for a real Cloudflare Pages + Supabase deployment.

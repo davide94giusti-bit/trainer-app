@@ -1,0 +1,10 @@
+name = "trainer-app-supabase-cloudflare"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "dist"
+
+[vars]
+# Frontend-safe values are configured in Cloudflare Pages, not committed here.
+# VITE_SUPABASE_URL = "https://your-project.supabase.co"
+# VITE_SUPABASE_ANON_KEY = "your-anon-key"
+
+# Add SUPABASE_SERVICE_ROLE_KEY as an encrypted Pages secret only if using functions/api/admin/create-customer.ts.

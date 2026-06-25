@@ -1,0 +1,27 @@
+-- Destructive reset for app-owned public tables only. Does not delete Supabase Auth users.
+truncate table
+  public.notification_deliveries,
+  public.notifications,
+  public.body_metrics,
+  public.session_credit_ledger,
+  public.payments,
+  public.packages,
+  public.shared_session_requests,
+  public.cancellation_logs,
+  public.reschedule_requests,
+  public.booking_requests,
+  public.availability_exceptions,
+  public.availability_rules,
+  public.session_exercises,
+  public.session_participants,
+  public.sessions,
+  public.workout_plan_exercises,
+  public.workout_plans,
+  public.exercise_media,
+  public.exercises,
+  public.customer_private_notes,
+  public.customer_profiles,
+  public.trainer_profiles,
+  public.app_settings,
+  public.audit_logs
+restart identity cascade;

@@ -1,0 +1,2 @@
+import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+export default function FormSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: string[] }) { return <FormControl fullWidth margin="normal"><InputLabel>{label}</InputLabel><Select label={label} value={value} onChange={e => onChange(e.target.value)}>{options.map(o => <MenuItem key={o} value={o}>{o}</MenuItem>)}</Select></FormControl>; }
