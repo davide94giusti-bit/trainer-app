@@ -1,13 +1,25 @@
 import { format } from 'date-fns';
 
+function isValidDate(value: Date): boolean {
+  return value instanceof Date && !Number.isNaN(value.getTime());
+}
+
 export function formatDateTime(value?: string | null): string {
   if (!value) return '-';
-  return format(new Date(value), 'dd MMM yyyy HH:mm');
+
+  const date = new Date(value);
+  if (!isValidDate(date)) return '-';
+
+  return format(date, 'dd MMM yyyy HH:mm');
 }
 
 export function formatDate(value?: string | null): string {
   if (!value) return '-';
-  return format(new Date(value), 'dd MMM yyyy');
+
+  const date = new Date(value);
+  if (!isValidDate(date)) return '-';
+
+  return format(date, 'dd MMM yyyy');
 }
 
 export function formatMoney(value: number | string | null | undefined, currency = 'EUR'): string {
