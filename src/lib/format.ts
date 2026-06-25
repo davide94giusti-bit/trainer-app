@@ -1,30 +1,26 @@
 import { format } from 'date-fns';
 
-function isValidDate(value: Date): boolean {
-  return value instanceof Date && !Number.isNaN(value.getTime());
+function safeDate(value?: string | null): Date | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 export function formatDateTime(value?: string | null): string {
-  if (!value) return '-';
-
-  const date = new Date(value);
-  if (!isValidDate(date)) return '-';
-
+  const date = safeDate(value);
+  if (!date) return '-';
   return format(date, 'dd MMM yyyy HH:mm');
 }
 
 export function formatDate(value?: string | null): string {
-  if (!value) return '-';
-
-  const date = new Date(value);
-  if (!isValidDate(date)) return '-';
-
+  const date = safeDate(value);
+  if (!date) return '-';
   return format(date, 'dd MMM yyyy');
 }
 
-export function formatMoney(value: number | string | null | undefined, currency = 'EUR'): string {
+export function formatMoney(value: number | string | null | undefined, currency = 'EUR', locale?: string): string {
   const amount = Number(value ?? 0);
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+  return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(Number.isFinite(amount) ? amount : 0);
 }
 
 export function localized(json: Record<string, string> | null | undefined, language = 'en'): string {

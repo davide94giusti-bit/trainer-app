@@ -9,7 +9,7 @@ const dictionaries: Record<Language, Record<string, string>> = { en, es, it };
 type I18nContextValue = {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (key: string, fallback?: string) => string;
+  t: (key: string, fallbackOrVars?: string | Record<string, string | number>) => string;
 };
 
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
@@ -24,8 +24,16 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('trainer.language', next);
       setLanguageState(next);
     },
-    t(key, fallback) {
-      return dictionaries[language][key] ?? dictionaries.en[key] ?? fallback ?? key;
+    t(key, fallbackOrVars) {
+      const fallback = typeof fallbackOrVars === 'string' ? fallbackOrVars : undefined;
+      const vars = typeof fallbackOrVars === 'object' && fallbackOrVars !== null ? fallbackOrVars : undefined;
+      let value = dictionaries[language][key] ?? dictionaries.en[key] ?? fallback ?? key;
+      if (vars) {
+        for (const [name, replacement] of Object.entries(vars)) {
+          value = value.split(`{${name}}`).join(String(replacement));
+        }
+      }
+      return value;
     },
   }), [language]);
 

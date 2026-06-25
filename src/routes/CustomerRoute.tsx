@@ -7,6 +7,6 @@ export default function CustomerRoute() {
   const profile = useQuery({ queryKey: ['my-profile'], queryFn: getMyProfile });
   if (profile.isLoading) return <LoadingScreen />;
   if (!profile.data) return <Navigate to="/login" replace />;
-  if (!['customer', 'admin'].includes(profile.data.role)) return <Navigate to="/login" replace />;
+  if (profile.data.role !== 'customer' || profile.data.status !== 'active') return <Navigate to="/admin" replace />;
   return <Outlet />;
 }

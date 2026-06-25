@@ -150,6 +150,7 @@ create table public.sessions (
   start_at timestamptz not null,
   end_at timestamptz not null,
   notes text,
+  focus_area text,
   credit_consumed boolean not null default false,
   cancelled_at timestamptz,
   cancellation_reason text,
@@ -159,6 +160,7 @@ create table public.sessions (
 );
 create trigger sessions_set_updated_at before update on public.sessions for each row execute function public.set_updated_at();
 create index sessions_time_idx on public.sessions (start_at, end_at);
+create index sessions_focus_area_idx on public.sessions (focus_area);
 
 create table public.session_participants (
   id uuid primary key default gen_random_uuid(),
@@ -259,10 +261,16 @@ create table public.shared_session_requests (
   target_customer_user_id uuid not null references public.profiles(id),
   status public.shared_request_status not null default 'pending',
   trainer_status public.shared_request_status not null default 'pending',
+  requester_notes text,
+  target_responded_at timestamptz,
+  trainer_responded_at timestamptz,
+  finalized_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 create trigger shared_session_requests_set_updated_at before update on public.shared_session_requests for each row execute function public.set_updated_at();
+create index shared_session_requests_source_idx on public.shared_session_requests (source_session_id, requester_user_id, status, trainer_status);
+create unique index shared_session_requests_one_open_per_customer_session_idx on public.shared_session_requests(source_session_id, requester_user_id) where status = 'pending' and trainer_status = 'pending';
 
 create table public.packages (
   id uuid primary key default gen_random_uuid(),
@@ -369,3 +377,85 @@ join public.customer_profiles cp on cp.user_id = p.id
 where p.role = 'customer';
 
 comment on table public.customer_private_notes is 'Admin-only customer notes. This prevents customers from reading internal trainer notes through column-level leakage.';
+
+-- 2026 admin console and customer app builder extension
+create table if not exists public.app_branding_settings (
+  id text primary key default 'default' check (id = 'default'),
+  app_name text not null default 'Trainer App',
+  logo_url text,
+  primary_color text not null default '#1976d2',
+  secondary_color text not null default '#9c27b0',
+  accent_color text not null default '#ed6c02',
+  default_theme public.theme_preference not null default 'system',
+  login_title jsonb not null default '{"en":"Welcome back","es":"Bienvenido de nuevo","it":"Bentornato"}'::jsonb,
+  login_subtitle jsonb not null default '{"en":"Log in to manage your training.","es":"Inicia sesión para gestionar tu entrenamiento.","it":"Accedi per gestire il tuo allenamento."}'::jsonb,
+  support_email text,
+  business_name text,
+  trainer_display_name text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  updated_by uuid references public.profiles(id)
+);
+drop trigger if exists app_branding_settings_set_updated_at on public.app_branding_settings;
+create trigger app_branding_settings_set_updated_at before update on public.app_branding_settings for each row execute function public.set_updated_at();
+
+create table if not exists public.app_content_blocks (
+  key text primary key,
+  label text not null,
+  localized_value jsonb not null default '{"en":"","es":"","it":""}'::jsonb,
+  enabled boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  updated_by uuid references public.profiles(id),
+  constraint app_content_blocks_languages check (localized_value ? 'en' and localized_value ? 'es' and localized_value ? 'it')
+);
+drop trigger if exists app_content_blocks_set_updated_at on public.app_content_blocks;
+create trigger app_content_blocks_set_updated_at before update on public.app_content_blocks for each row execute function public.set_updated_at();
+
+create table if not exists public.app_dashboard_widgets (
+  key text primary key,
+  label text not null,
+  enabled boolean not null default true,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  updated_by uuid references public.profiles(id)
+);
+drop trigger if exists app_dashboard_widgets_set_updated_at on public.app_dashboard_widgets;
+create trigger app_dashboard_widgets_set_updated_at before update on public.app_dashboard_widgets for each row execute function public.set_updated_at();
+
+create table if not exists public.app_navigation_items (
+  key text primary key,
+  label text not null,
+  route text not null,
+  enabled boolean not null default true,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  updated_by uuid references public.profiles(id),
+  constraint app_navigation_items_no_admin_routes check (route not like '/admin%')
+);
+drop trigger if exists app_navigation_items_set_updated_at on public.app_navigation_items;
+create trigger app_navigation_items_set_updated_at before update on public.app_navigation_items for each row execute function public.set_updated_at();
+
+create table if not exists public.app_feature_flags (
+  key text primary key,
+  label text not null,
+  enabled boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  updated_by uuid references public.profiles(id)
+);
+drop trigger if exists app_feature_flags_set_updated_at on public.app_feature_flags;
+create trigger app_feature_flags_set_updated_at before update on public.app_feature_flags for each row execute function public.set_updated_at();
+
+create table if not exists public.app_policy_settings (
+  key text primary key,
+  label text not null,
+  value jsonb not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  updated_by uuid references public.profiles(id)
+);
+drop trigger if exists app_policy_settings_set_updated_at on public.app_policy_settings;
+create trigger app_policy_settings_set_updated_at before update on public.app_policy_settings for each row execute function public.set_updated_at();

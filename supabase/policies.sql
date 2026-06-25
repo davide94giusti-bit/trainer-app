@@ -108,3 +108,41 @@ create policy app_settings_read_active on public.app_settings for select using (
 create policy app_settings_admin_write on public.app_settings for all using (public.is_admin()) with check (public.is_admin());
 create policy audit_logs_admin_read on public.audit_logs for select using (public.is_admin());
 -- no direct insert/update/delete to audit_logs from clients. Inserts happen through security definer RPC.
+
+-- 2026 app builder RLS
+alter table public.app_branding_settings enable row level security;
+alter table public.app_content_blocks enable row level security;
+alter table public.app_dashboard_widgets enable row level security;
+alter table public.app_navigation_items enable row level security;
+alter table public.app_feature_flags enable row level security;
+alter table public.app_policy_settings enable row level security;
+
+drop policy if exists app_branding_active_read on public.app_branding_settings;
+create policy app_branding_active_read on public.app_branding_settings for select using (public.is_active_user());
+drop policy if exists app_branding_admin_write on public.app_branding_settings;
+create policy app_branding_admin_write on public.app_branding_settings for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists app_content_read_enabled_or_admin on public.app_content_blocks;
+create policy app_content_read_enabled_or_admin on public.app_content_blocks for select using (public.is_admin() or (enabled and public.is_active_user()));
+drop policy if exists app_content_admin_write on public.app_content_blocks;
+create policy app_content_admin_write on public.app_content_blocks for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists app_widgets_read_enabled_or_admin on public.app_dashboard_widgets;
+create policy app_widgets_read_enabled_or_admin on public.app_dashboard_widgets for select using (public.is_admin() or (enabled and public.is_active_user()));
+drop policy if exists app_widgets_admin_write on public.app_dashboard_widgets;
+create policy app_widgets_admin_write on public.app_dashboard_widgets for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists app_navigation_read_enabled_or_admin on public.app_navigation_items;
+create policy app_navigation_read_enabled_or_admin on public.app_navigation_items for select using (public.is_admin() or (enabled and public.is_active_user() and route not like '/admin%'));
+drop policy if exists app_navigation_admin_write on public.app_navigation_items;
+create policy app_navigation_admin_write on public.app_navigation_items for all using (public.is_admin()) with check (public.is_admin() and route not like '/admin%');
+
+drop policy if exists app_feature_flags_read_enabled_or_admin on public.app_feature_flags;
+create policy app_feature_flags_read_enabled_or_admin on public.app_feature_flags for select using (public.is_admin() or (enabled and public.is_active_user()));
+drop policy if exists app_feature_flags_admin_write on public.app_feature_flags;
+create policy app_feature_flags_admin_write on public.app_feature_flags for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists app_policy_settings_read_active on public.app_policy_settings;
+create policy app_policy_settings_read_active on public.app_policy_settings for select using (public.is_active_user());
+drop policy if exists app_policy_settings_admin_write on public.app_policy_settings;
+create policy app_policy_settings_admin_write on public.app_policy_settings for all using (public.is_admin()) with check (public.is_admin());

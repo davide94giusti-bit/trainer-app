@@ -7,4 +7,4 @@ pages_build_output_dir = "dist"
 # VITE_SUPABASE_URL = "https://your-project.supabase.co"
 # VITE_SUPABASE_ANON_KEY = "your-anon-key"
 
-# Add SUPABASE_SERVICE_ROLE_KEY as an encrypted Pages secret only if using functions/api/admin/create-customer.ts.
+# Add SUPABASE_SERVICE_ROLE_KEY as an encrypted Pages secret for functions/api/admin/create-user.ts.

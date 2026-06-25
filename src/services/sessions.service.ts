@@ -27,3 +27,15 @@ export async function cancelSession(sessionId: string, reason: string) {
   const { error } = await supabase.rpc('cancel_session', { session_id: sessionId, reason });
   if (error) throw error;
 }
+
+
+export async function listMyUpcomingSessions() {
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('id,start_at,end_at,status,session_type,focus_area,notes')
+    .gte('start_at', new Date().toISOString())
+    .in('status', ['scheduled', 'confirmed'])
+    .order('start_at', { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}

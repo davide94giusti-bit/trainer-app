@@ -40,6 +40,12 @@ VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 ```
 
+Only server-side Cloudflare Pages Functions may use:
+
+```bash
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+```
+
 ## Supabase setup
 
 In Supabase SQL editor, run:
@@ -55,6 +61,13 @@ In Supabase SQL editor, run:
 -- supabase/storage.sql
 -- 5
 -- supabase/seed.sql
+```
+
+For existing deployed projects, also run:
+
+```sql
+-- supabase/migrations/20260625_admin_app_builder.sql
+-- supabase/migrations/20260625_monthly_availability_shared_sessions.sql
 ```
 
 Then create an admin Auth user and link it to `profiles`, or run:
@@ -80,7 +93,7 @@ VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 ```
 
-Only add this as an encrypted Pages secret if using the optional admin create-customer function:
+Add this as an encrypted Pages secret for secure admin/customer creation:
 
 ```bash
 SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
@@ -88,14 +101,15 @@ SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
 
 ## Admin/demo user creation
 
-Recommended MVP path:
+Recommended path:
 
-1. Create `admin@example.com` in Supabase Auth.
-2. Run `scripts/create-demo-users.ts` or manually insert the matching admin profile row.
-3. Create or invite customers through Supabase Auth.
-4. Insert matching `profiles` and `customer_profiles` rows.
+1. Create the first admin manually in Supabase Auth or run `scripts/create-demo-users.ts`.
+2. Ensure the matching `public.profiles` row has `role = admin` and `status = active`.
+3. Log in as that admin.
+4. Use `/admin/admins/new` to create additional admin login users.
+5. Use `/admin/customers/new` to create customer login users and customer profiles.
 
-The optional Pages Function can invite users through the Supabase Admin API after verifying the caller is an active admin.
+The Pages Function at `/api/admin/create-user` creates or invites Supabase Auth users after verifying that the caller is an active admin.
 
 ## Implemented
 
@@ -104,17 +118,23 @@ The optional Pages Function can invite users through the Supabase Admin API afte
 - MUI responsive layout with drawer and mobile bottom nav.
 - Light/dark/system theme preference.
 - English, Spanish, and Italian message dictionaries.
-- Customer dashboard, sessions, workout plan, metrics, availability, payments, notifications, and settings.
+- Customer dashboard, sessions, workout plan, metrics, monthly availability calendar, payments, notifications, and settings.
 - Admin dashboard, customers, exercises, workout plans, sessions, bookings, payments, packages, settings, notifications, and audit logs.
 - Complete SQL schema with RLS enabled for every app table.
-- RPC functions for booking, sessions, payments, credits, workout assignment, notifications, and availability.
+- RPC functions for booking, rescheduling, shared-session approval, sessions, payments, credits, workout assignment, notifications, and monthly availability.
 - Seed data and RLS verification checklist.
-- Optional Cloudflare Pages Function for secure admin invite/customer creation.
+- Secure Cloudflare Pages Function for admin/customer Auth user creation and invitations.
+- Dedicated `/admin` back office with admin-only navigation.
+- Admin user management and customer user/profile creation flows.
+- App Builder for branding, customer dashboard widgets, content blocks, navigation, policies, languages, feature flags, and read-only preview.
+- Full customer monthly availability calendar with session-type filters, full-page day detail dialog, booking requests, reschedule requests, and shared-session requests.
+- Admin-configurable shared-session discount percentage through App Builder policies.
+- Shared-session request workflow requiring both trainer approval and approval from the customer already booked in the session.
+- i18n key coverage safeguard for English, Spanish, and Italian dictionaries.
 
 ## Deferred
 
 - Stripe checkout integration.
-- Full shared-session matching UI and acceptance workflow.
 - Email/push delivery providers beyond the notification delivery table.
 - Rich exercise media upload UI.
 - Automated end-to-end browser tests.
@@ -122,8 +142,9 @@ The optional Pages Function can invite users through the Supabase Admin API afte
 
 ## Known limitations
 
-- Hosted Supabase Auth users are not created by plain SQL. Use Supabase dashboard, the local service-role script, or the optional Pages Function.
+- Hosted Supabase Auth users are not created by plain SQL. Use the Cloudflare Pages Function, Supabase dashboard, or the local service-role script for the first bootstrap admin.
 - RLS must be tested in a real Supabase project with separate admin/customer JWTs.
+- The monthly calendar depends on trainer availability rules and session focus metadata. If sessions do not have a `focus_area`, the calendar derives a filter label from linked exercise categories or workout plan title where available.
 - The frontend is an MVP admin/customer console, not a polished consumer-grade mobile app yet.
 
 ## Next recommended step

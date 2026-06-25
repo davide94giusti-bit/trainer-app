@@ -5,10 +5,12 @@ import { resetPasswordSchema } from '../validation/auth.schemas';
 import { updatePassword } from '../services/auth.service';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useI18n } from '../lib/i18n';
 
 export default function ResetPasswordPage() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(resetPasswordSchema), defaultValues: { password: '', confirmPassword: '' } });
-  return <Box minHeight="100vh" display="grid" alignItems="center" justifyContent="center" p={2}><Card sx={{ width: 420, maxWidth: '100%' }}><CardContent><Stack spacing={2}><Typography variant="h5">Set new password</Typography>{error && <Alert severity="error">{error}</Alert>}<form onSubmit={handleSubmit(async v => { try { await updatePassword(v.password); navigate('/dashboard'); } catch (e: any) { setError(e.message); } })}><TextField label="New password" type="password" fullWidth margin="normal" {...register('password')} error={!!errors.password} helperText={errors.password?.message} /><TextField label="Confirm password" type="password" fullWidth margin="normal" {...register('confirmPassword')} error={!!errors.confirmPassword} helperText={errors.confirmPassword?.message} /><Button fullWidth type="submit" disabled={isSubmitting}>Update password</Button></form></Stack></CardContent></Card></Box>;
+  return <Box minHeight="100vh" display="grid" alignItems="center" justifyContent="center" p={2}><Card sx={{ width: 420, maxWidth: '100%' }}><CardContent><Stack spacing={2}><Typography variant="h5">{t('auth.setNewPassword')}</Typography>{error && <Alert severity="error">{error}</Alert>}<form onSubmit={handleSubmit(async v => { try { await updatePassword(v.password); navigate('/dashboard'); } catch (e: any) { setError(e.message); } })}><TextField label={t('auth.newPassword')} type="password" fullWidth margin="normal" {...register('password')} error={!!errors.password} helperText={errors.password?.message} /><TextField label={t('auth.confirmPassword')} type="password" fullWidth margin="normal" {...register('confirmPassword')} error={!!errors.confirmPassword} helperText={errors.confirmPassword?.message} /><Button fullWidth type="submit" disabled={isSubmitting}>{t('auth.updatePassword')}</Button></form></Stack></CardContent></Card></Box>;
 }

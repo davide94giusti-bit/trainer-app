@@ -48,7 +48,9 @@ export interface SessionRow {
   start_at: string;
   end_at: string;
   notes: string | null;
+  focus_area?: string | null;
 }
+
 
 export interface AppSetting {
   key: string;
