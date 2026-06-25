@@ -7,6 +7,7 @@ export default function AppBuilderPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const sections = [
+    ['/admin/website-edit', t('websiteEdit.title')],
     ['/admin/app-builder/branding', t('appBuilder.branding.title')],
     ['/admin/app-builder/dashboard', t('appBuilder.dashboard.title')],
     ['/admin/app-builder/content', t('appBuilder.content.title')],

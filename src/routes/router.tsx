@@ -27,6 +27,7 @@ import AdminUsersPage from '../pages/admin/AdminUsersPage';
 import CreateAdminUserPage from '../pages/admin/CreateAdminUserPage';
 import AdminUserDetailPage from '../pages/admin/AdminUserDetailPage';
 import AppBuilderPage from '../pages/admin/app-builder/AppBuilderPage';
+import WebsiteEditPage from '../pages/admin/WebsiteEditPage';
 import BrandingSettingsPage from '../pages/admin/app-builder/BrandingSettingsPage';
 import DashboardBuilderPage from '../pages/admin/app-builder/DashboardBuilderPage';
 import ContentBlocksPage from '../pages/admin/app-builder/ContentBlocksPage';
@@ -85,6 +86,7 @@ export const router = createBrowserRouter([
             { path: 'admins/new', element: <CreateAdminUserPage /> },
             { path: 'admins/:id', element: <AdminUserDetailPage /> },
             { path: 'app-builder', element: <AppBuilderPage /> },
+            { path: 'website-edit', element: <WebsiteEditPage /> },
             { path: 'app-builder/branding', element: <BrandingSettingsPage /> },
             { path: 'app-builder/dashboard', element: <DashboardBuilderPage /> },
             { path: 'app-builder/content', element: <ContentBlocksPage /> },

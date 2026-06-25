@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Card,
+  CardActionArea,
   CardActions,
   CardContent,
   Chip,
@@ -193,7 +194,7 @@ export default function AvailabilityPage() {
             </FormControl>
             <Typography color="text.secondary">{t('availability.sharedDiscountNotice', { percent: discountPercent })}</Typography>
           </Stack>
-          {availability.isLoading ? <LoadingScreen /> : <CalendarGrid days={days} activeMonth={monthStart.getMonth()} grouped={grouped} language={language} onSelectDay={setSelectedDay} />}
+          {availability.isLoading ? <LoadingScreen /> : <CalendarGrid days={days} activeMonth={monthStart.getMonth()} grouped={grouped} language={language} selectedDay={selectedDay} onSelectDay={setSelectedDay} />}
         </Stack>
       </CardContent>
     </Card>
@@ -243,7 +244,7 @@ export default function AvailabilityPage() {
   </Stack>;
 }
 
-function CalendarGrid({ days, activeMonth, grouped, language, onSelectDay }: { days: Date[]; activeMonth: number; grouped: Record<string, MonthlyAvailabilitySlot[]>; language: string; onSelectDay: (day: string) => void }) {
+function CalendarGrid({ days, activeMonth, grouped, language, selectedDay, onSelectDay }: { days: Date[]; activeMonth: number; grouped: Record<string, MonthlyAvailabilitySlot[]>; language: string; selectedDay: string | null; onSelectDay: (day: string) => void }) {
   const { t } = useI18n();
   const weekdayLabels = useMemo(() => {
     const base = new Date(2026, 0, 5);
@@ -264,17 +265,22 @@ function CalendarGrid({ days, activeMonth, grouped, language, onSelectDay }: { d
         return <Card
           key={key}
           variant="outlined"
-          onClick={() => hasSlots && onSelectDay(key)}
-          sx={{ minHeight: 118, cursor: hasSlots ? 'pointer' : 'default', opacity: outsideMonth ? 0.45 : 1, bgcolor: hasSlots ? 'background.paper' : 'action.hover' }}
+          sx={{ minHeight: 118, opacity: outsideMonth ? 0.45 : 1, bgcolor: selectedDay === key ? 'action.selected' : hasSlots ? 'background.paper' : 'action.hover' }}
         >
-          <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-            <Stack spacing={1}>
-              <Typography fontWeight={700}>{day.getDate()}</Typography>
-              {freeCount > 0 && <Chip size="small" label={`${freeCount} ${t('availability.openSlots')}`} />}
-              {sharedCount > 0 && <Chip size="small" color="primary" label={`${sharedCount} ${t('availability.sharedOptions')}`} />}
-              {!hasSlots && <Typography variant="caption" color="text.secondary">{t('availability.noAvailability')}</Typography>}
-            </Stack>
-          </CardContent>
+          <CardActionArea
+            onClick={() => onSelectDay(key)}
+            aria-label={t('availability.openDayDetails', { day: dayLabel(key, language) })}
+            sx={{ minHeight: 118, height: '100%', alignItems: 'stretch' }}
+          >
+            <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
+              <Stack spacing={1}>
+                <Typography fontWeight={700}>{day.getDate()}</Typography>
+                {freeCount > 0 && <Chip size="small" label={`${freeCount} ${t('availability.openSlots')}`} />}
+                {sharedCount > 0 && <Chip size="small" color="primary" label={`${sharedCount} ${t('availability.sharedOptions')}`} />}
+                {!hasSlots && <Typography variant="caption" color="text.secondary">{t('availability.noAvailability')}</Typography>}
+              </Stack>
+            </CardContent>
+          </CardActionArea>
         </Card>;
       })}
     </Box>

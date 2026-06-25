@@ -13,6 +13,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import HistoryIcon from '@mui/icons-material/History';
 import WebIcon from '@mui/icons-material/Web';
+import DesignServicesIcon from '@mui/icons-material/DesignServices';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -35,6 +36,7 @@ export default function AdminShell() {
     { label: t('nav.customers'), path: '/admin/customers', icon: <PeopleIcon /> },
     { label: t('nav.admins'), path: '/admin/admins', icon: <AdminPanelSettingsIcon /> },
     { label: t('nav.appBuilder'), path: '/admin/app-builder', icon: <WebIcon /> },
+    { label: t('nav.websiteEdit'), path: '/admin/website-edit', icon: <DesignServicesIcon /> },
     { label: t('nav.exercises'), path: '/admin/exercises', icon: <FitnessCenterIcon /> },
     { label: t('nav.workoutPlans'), path: '/admin/workout-plans', icon: <AssignmentIcon /> },
     { label: t('nav.sessions'), path: '/admin/sessions', icon: <CalendarMonthIcon /> },
