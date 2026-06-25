@@ -28,7 +28,11 @@ export async function createAdminOrCustomerUser(input: CreateUserInput) {
     body: JSON.stringify(input),
   });
 
-  const payload = await response.json().catch(() => ({}));
+    const payload = (await response.json().catch(() => ({}))) as {
+    error?: string;
+    [key: string]: unknown;
+  };
+
   if (!response.ok) throw new Error(payload.error ?? 'User creation failed');
   return payload;
 }
