@@ -291,16 +291,29 @@ begin
 end;
 $$;
 
-create or replace function public.get_customer_credit_balance(customer_user_id uuid)
+create or replace function public.get_customer_credit_balance(p_customer_user_id uuid)
 returns numeric
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public
 as $$
-  select case when public.is_admin() or auth.uid() = customer_user_id then coalesce(sum(quantity), 0) else null end
-  from public.session_credit_ledger
-  where customer_user_id = get_customer_credit_balance.customer_user_id;
+declare
+  v_balance numeric;
+begin
+  perform public.assert_active();
+
+  if not public.is_admin() and auth.uid() <> p_customer_user_id then
+    raise exception 'Not authorized' using errcode = '42501';
+  end if;
+
+  select coalesce(sum(l.quantity), 0)
+  into v_balance
+  from public.session_credit_ledger l
+  where l.customer_user_id = p_customer_user_id;
+
+  return v_balance;
+end;
 $$;
 
 create or replace function public.get_my_credit_balance()
@@ -310,7 +323,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select coalesce(sum(quantity), 0) from public.session_credit_ledger where customer_user_id = auth.uid();
+  select public.get_customer_credit_balance(auth.uid());
 $$;
 
 create or replace function public.request_booking(requested_start timestamptz, requested_end timestamptz, notes text default null)
